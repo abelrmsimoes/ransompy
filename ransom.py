@@ -2,19 +2,19 @@ import os
 import uuid
 from cryptography.fernet import Fernet
 
+KEYS_DIR = "keys"
+
 
 def generate_key(md5_hash):
     key = Fernet.generate_key()
-    # printa o diretório atual
-    print(f"{os.getcwd()}/keys")
-    if not os.path.exists(f"{os.getcwd()}/keys"):
-        os.mkdir(f"{os.getcwd()}/keys")
-    with open(f"{os.getcwd()}/keys/{md5_hash}.key", "wb") as key_file:
+    if not os.path.exists(KEYS_DIR):
+        os.mkdir(KEYS_DIR)
+    with open(f"{KEYS_DIR}/{md5_hash}.key", "wb") as key_file:
         key_file.write(key)
 
 
 def load_key(md5_hash):
-    return open(f"{os.getcwd()}/keys/{md5_hash}.key", "rb").read()
+    return open(f"{KEYS_DIR}/{md5_hash}.key", "rb").read()
 
 
 def encrypt_file(file_path, key):
@@ -46,38 +46,53 @@ def main():
         directory = input(
             "Digite o caminho completo do diretório que deseja criptografar: "
         )
+
+        if not os.path.exists(directory):
+            print("Diretório não encontrado.")
+            return
+
         md5_hash = uuid.uuid5(uuid.NAMESPACE_DNS, directory).hex
         generate_key(md5_hash)
         key = load_key(md5_hash)
+
         for root, dirs, files in os.walk(directory):
             for file in files:
+                file_path = os.path.join(root, file)
                 try:
-                    encrypt_file(os.path.join(root, file), key)
-                    print(f"{file} criptografado com sucesso!")
-                except:
-                    print(f"{file} não pode ser criptografado!")
-        print("Arquivos criptografados com sucesso!")
+                    # Verificar se o arquivo já está criptografado
+                    if not file_path.endswith(".key"):
+                        encrypt_file(file_path, key)
+                        print(f"{file} criptografado com sucesso.")
+                except Exception as e:
+                    print(f"{file} não pode ser criptografado! Erro: {e}")
 
     elif choice == "2":
         directory = input(
             "Digite o caminho completo do diretório que deseja descriptografar: "
         )
+
+        if not os.path.exists(directory):
+            print("Diretório não encontrado.")
+            return
+
         md5_hash = uuid.uuid5(uuid.NAMESPACE_DNS, directory).hex
         key = load_key(md5_hash)
-        everything_ok = True
+        can_remove_key = True
 
         for root, dirs, files in os.walk(directory):
             for file in files:
+                file_path = os.path.join(root, file)
                 try:
-                    decrypt_file(os.path.join(root, file), key)
-                    print(f"{file} descriptografado com sucesso!")
-                except:
-                    print(f"{file} não pode ser descriptografado!")
-                    everything_ok = False
-        print("Arquivos descriptografados com sucesso!")
+                    # Verificar se o arquivo já está descriptografado
+                    if not file_path.endswith(".key"):
+                        decrypt_file(file_path, key)
+                        print(f"{file} descriptografado com sucesso.")
+                except Exception as e:
+                    print(f"{file} não pode ser descriptografado! Erro: {e}")
+                    can_remove_key = False
 
-        if everything_ok:
-            os.remove(f"{os.getcwd()}/keys/{md5_hash}.key")
+        if can_remove_key:
+            os.remove(f"{os.getcwd()}/{KEYS_DIR}/{md5_hash}.key")
 
     else:
         print("Opção inválida. Tente novamente.")
