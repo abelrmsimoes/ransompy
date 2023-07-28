@@ -5,14 +5,16 @@ from cryptography.fernet import Fernet
 
 def generate_key(md5_hash):
     key = Fernet.generate_key()
-    if not os.path.exists("./keys"):
-        os.mkdir("./keys")
-    with open(f"./keys/{md5_hash}.key", "wb") as key_file:
+    # printa o diretório atual
+    print(f"{os.getcwd()}/keys")
+    if not os.path.exists(f"{os.getcwd()}/keys"):
+        os.mkdir(f"{os.getcwd()}/keys")
+    with open(f"{os.getcwd()}/keys/{md5_hash}.key", "wb") as key_file:
         key_file.write(key)
 
 
 def load_key(md5_hash):
-    return open(f"./keys/{md5_hash}.key", "rb").read()
+    return open(f"{os.getcwd()}/keys/{md5_hash}.key", "rb").read()
 
 
 def encrypt_file(file_path, key):
@@ -38,12 +40,12 @@ def decrypt_file(file_path, key):
 
 
 def main():
-    choice = input(
-        "Você deseja criptografar (1) ou descriptografar (2) um diretório? ")
+    choice = input("Você deseja criptografar (1) ou descriptografar (2) um diretório? ")
 
     if choice == "1":
         directory = input(
-            "Digite o caminho completo do diretório que deseja criptografar: ")
+            "Digite o caminho completo do diretório que deseja criptografar: "
+        )
         md5_hash = uuid.uuid5(uuid.NAMESPACE_DNS, directory).hex
         generate_key(md5_hash)
         key = load_key(md5_hash)
@@ -58,7 +60,8 @@ def main():
 
     elif choice == "2":
         directory = input(
-            "Digite o caminho completo do diretório que deseja descriptografar: ")
+            "Digite o caminho completo do diretório que deseja descriptografar: "
+        )
         md5_hash = uuid.uuid5(uuid.NAMESPACE_DNS, directory).hex
         key = load_key(md5_hash)
         everything_ok = True
@@ -74,7 +77,7 @@ def main():
         print("Arquivos descriptografados com sucesso!")
 
         if everything_ok:
-            os.remove(f"./keys/{md5_hash}.key")
+            os.remove(f"{os.getcwd()}/keys/{md5_hash}.key")
 
     else:
         print("Opção inválida. Tente novamente.")
