@@ -1,2 +1,5 @@
 # Fernet key
 *.key
+
+# Database
+database/*
