@@ -1,5 +1,8 @@
 # Fernet key
 *.key
 
+# Venv folder
+venv/
+
 # Database
 database/*
